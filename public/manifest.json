@@ -1,10 +1,223 @@
-{
-  "name": "안전 순회점검",
-  "short_name": "안전점검",
-  "description": "구청 자활센터 식당/카페 안전점검 자동화 앱",
-  "start_url": "/",
-  "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#2563eb",
-  "orientation": "portrait"
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#2563eb">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="안전점검">
+  <link rel="manifest" href="manifest.json">
+  <title>안전 순회점검</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; background: #f5f5f7; color: #1d1d1f; padding-bottom: 20px; }
+    .header { background: linear-gradient(135deg, #2563eb, #3b82f6); color: white; padding: 1.5rem 1rem; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .header h1 { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
+    .header p { font-size: 13px; opacity: 0.9; }
+    .container { max-width: 500px; margin: 0 auto; padding: 1rem; }
+    .section { background: white; border-radius: 12px; padding: 1.25rem; margin-bottom: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    .section h2 { font-size: 15px; font-weight: 600; margin-bottom: 1rem; color: #1d1d1f; }
+    .form-group { margin-bottom: 1rem; }
+    .form-group:last-child { margin-bottom: 0; }
+    label { display: block; font-size: 13px; font-weight: 500; color: #424245; margin-bottom: 6px; }
+    input, select, textarea { width: 100%; padding: 12px 14px; font-size: 15px; border: 1px solid #d2d2d7; border-radius: 8px; background: #fff; color: #1d1d1f; font-family: inherit; -webkit-appearance: none; }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: #2563eb; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .facility-selector { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .facility-card { padding: 1rem; border: 2px solid #d2d2d7; border-radius: 10px; background: white; cursor: pointer; text-align: center; transition: all 0.2s; }
+    .facility-card.active { background: #eff6ff; border-color: #2563eb; color: #2563eb; }
+    .facility-card .icon { font-size: 28px; margin-bottom: 6px; }
+    .facility-card .title { font-size: 14px; font-weight: 600; }
+    .facility-card .subtitle { font-size: 11px; opacity: 0.7; margin-top: 2px; }
+    .upload-area { border: 2px dashed #d2d2d7; border-radius: 10px; padding: 1.5rem 1rem; text-align: center; cursor: pointer; background: #fafafa; }
+    .upload-icon { font-size: 32px; margin-bottom: 8px; }
+    .upload-area p { font-size: 14px; color: #424245; margin-bottom: 4px; }
+    .upload-area small { font-size: 12px; color: #86868b; }
+    input[type="file"] { display: none; }
+    .image-count { display: inline-block; background: #eff6ff; color: #2563eb; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; margin-top: 8px; }
+    .image-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 12px; }
+    .image-item { position: relative; aspect-ratio: 1; border-radius: 8px; overflow: hidden; border: 1px solid #d2d2d7; }
+    .image-item img { width: 100%; height: 100%; object-fit: cover; }
+    .image-item .remove { position: absolute; top: 4px; right: 4px; background: rgba(0,0,0,0.7); color: white; border: none; border-radius: 50%; width: 24px; height: 24px; font-size: 14px; cursor: pointer; }
+    button { width: 100%; padding: 14px; font-size: 15px; font-weight: 600; border-radius: 10px; border: none; cursor: pointer; font-family: inherit; }
+    .btn-primary { background: linear-gradient(135deg, #2563eb, #3b82f6); color: white; box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3); }
+    .btn-primary:disabled { opacity: 0.5; }
+    .btn-secondary { background: #f0f0f3; color: #1d1d1f; margin-bottom: 8px; }
+    .status { padding: 14px; border-radius: 10px; margin-top: 12px; font-size: 14px; font-weight: 500; }
+    .status.info { background: #eff6ff; color: #2563eb; }
+    .status.success { background: #f0fdf4; color: #16a34a; }
+    .status.error { background: #fef2f2; color: #dc2626; }
+    .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid #2563eb; border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite; margin-right: 8px; vertical-align: middle; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    textarea { min-height: 80px; resize: vertical; }
+    .info-banner { background: #eff6ff; color: #2563eb; padding: 10px 14px; border-radius: 8px; font-size: 12px; margin-bottom: 12px; line-height: 1.5; }
+  </style>
+</head>
+<body>
+<div class="header">
+  <h1>📋 주간 작업장 순회점검</h1>
+  <p>AI 자동 분석 + Excel 자동 생성</p>
+</div>
+<div class="container">
+  <form id="form">
+    <div class="section">
+      <h2>🏢 시설 선택</h2>
+      <div class="facility-selector">
+        <div class="facility-card active" data-type="restaurant" onclick="selectFacility('restaurant', this)">
+          <div class="icon">🍳</div><div class="title">구내식당</div><div class="subtitle">17개 항목</div>
+        </div>
+        <div class="facility-card" data-type="cafe" onclick="selectFacility('cafe', this)">
+          <div class="icon">☕</div><div class="title">카페</div><div class="subtitle">14개 항목</div>
+        </div>
+      </div>
+    </div>
+    <div class="section">
+      <h2>📝 점검 정보</h2>
+      <div class="form-group"><label>사업(장)명 *</label><input type="text" id="facilityName" placeholder="예: 구내식당(동미락)" required></div>
+      <div class="form-group"><label>업체명 *</label><input type="text" id="companyName" placeholder="예: OO지역자활센터" required></div>
+      <div class="row">
+        <div class="form-group"><label>점검부서</label><input type="text" id="department" value="생활보장과"></div>
+        <div class="form-group"><label>점검자</label><input type="text" id="inspectorName" placeholder="이름"></div>
+      </div>
+      <div class="row">
+        <div class="form-group"><label>점검일자 *</label><input type="date" id="inspectionDate" required></div>
+        <div class="form-group"><label>점검 주차</label><input type="text" id="weekNumber" placeholder="5월 2주차"></div>
+      </div>
+    </div>
+    <div class="section">
+      <h2>📸 현장 사진</h2>
+      <div class="info-banner">조리실, 바닥, 콘센트, 소화기 등 점검 부위를 촬영하세요. AI가 자동 분석합니다.</div>
+      <div class="upload-area" id="uploadArea">
+        <div class="upload-icon">📷</div>
+        <p><strong>사진 촬영 또는 선택</strong></p>
+        <small>여러 장 업로드 가능</small>
+        <div class="image-count" id="imageCount">0장</div>
+      </div>
+      <input type="file" id="fileInput" multiple accept="image/*" capture="environment">
+      <div class="image-grid" id="imageGrid"></div>
+    </div>
+    <div class="section">
+      <h2>📌 추가 메모</h2>
+      <textarea id="notes" placeholder="특이사항 (선택)"></textarea>
+    </div>
+    <div class="section">
+      <button type="button" class="btn-secondary" onclick="document.getElementById('form').reset(); selectedImages = []; renderImages();">초기화</button>
+      <button type="submit" class="btn-primary" id="submitBtn">🚀 점검표 자동 생성</button>
+      <div id="statusMsg"></div>
+    </div>
+  </form>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.min.js"></script>
+<script>
+let facilityType = 'restaurant';
+let selectedImages = [];
+function selectFacility(type, el) {
+  facilityType = type;
+  document.querySelectorAll('.facility-card').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
 }
+const uploadArea = document.getElementById('uploadArea');
+const fileInput = document.getElementById('fileInput');
+const imageCount = document.getElementById('imageCount');
+const imageGrid = document.getElementById('imageGrid');
+uploadArea.addEventListener('click', () => fileInput.click());
+fileInput.addEventListener('change', async (e) => {
+  for (let file of e.target.files) {
+    if (!file.type.startsWith('image/')) continue;
+    const compressed = await compressImage(file);
+    selectedImages.push(compressed);
+    renderImages();
+  }
+});
+async function compressImage(file) {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const maxWidth = 1024;
+        const ratio = maxWidth / img.width;
+        canvas.width = maxWidth;
+        canvas.height = img.height * ratio;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL('image/jpeg', 0.8));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+function renderImages() {
+  imageCount.textContent = `${selectedImages.length}장`;
+  imageGrid.innerHTML = selectedImages.map((img, idx) => `<div class="image-item"><img src="${img}"><button type="button" class="remove" onclick="removeImage(${idx})">✕</button></div>`).join('');
+}
+function removeImage(idx) {
+  selectedImages.splice(idx, 1);
+  renderImages();
+}
+document.getElementById('inspectionDate').valueAsDate = new Date();
+document.getElementById('form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const facilityName = document.getElementById('facilityName').value;
+  const companyName = document.getElementById('companyName').value;
+  const department = document.getElementById('department').value;
+  const inspectorName = document.getElementById('inspectorName').value;
+  const inspectionDate = document.getElementById('inspectionDate').value;
+  const weekNumber = document.getElementById('weekNumber').value;
+  const notes = document.getElementById('notes').value;
+  if (!facilityName || !companyName) { showStatus('❌ 사업장명과 업체명을 입력하세요', 'error'); return; }
+  if (selectedImages.length === 0) { showStatus('❌ 사진을 1장 이상 업로드하세요', 'error'); return; }
+  const submitBtn = document.getElementById('submitBtn');
+  submitBtn.disabled = true;
+  showStatus(`<span class="spinner"></span> AI 분석 중... (${selectedImages.length}장)`, 'info');
+  try {
+    const imagesData = selectedImages.map(img => img.split(',')[1]);
+    const response = await fetch('/api/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ images: imagesData, facilityType, facilityName, companyName, inspectionDate, notes })
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || '분석 실패');
+    generateExcel(facilityName, companyName, department, inspectorName, inspectionDate, weekNumber, data.analysis, data.checklist);
+    showStatus(`✅ 보고서 생성 완료! 다운로드 폴더 확인`, 'success');
+  } catch (error) {
+    showStatus(`❌ 오류: ${error.message}`, 'error');
+  } finally {
+    submitBtn.disabled = false;
+  }
+});
+function generateExcel(facilityName, companyName, department, inspectorName, inspectionDate, weekNumber, analysis, checklist) {
+  const wb = XLSX.utils.book_new();
+  const headerTitle = `${weekNumber || ''} 작업장 순회 점검표`.trim();
+  const data = [
+    [headerTitle], [], ['', '', '', '', `○ 점검일자 : ${inspectionDate}`], [],
+    ['사업(장)명', facilityName, '', '업체명', companyName],
+    ['점검부서', department, '', '점검자', inspectorName], [],
+    ['순번', '점검 항목', '세부 내용', '양호', '미흡', '해당없음']
+  ];
+  checklist.forEach((item, idx) => {
+    const result = analysis.checklist[idx] || { result: '해당없음' };
+    data.push([item.no, item.category, item.detail,
+      result.result === '양호' ? 'O' : '',
+      result.result === '미흡' ? 'O' : '',
+      result.result === '해당없음' ? 'O' : '']);
+  });
+  data.push([], ['특이사항', analysis.specialNotes || ''], [], ['조치 사항', analysis.actionItems || ''], []);
+  if (analysis.imageDescriptions) {
+    data.push(['【 점검 사진 설명 】']);
+    analysis.imageDescriptions.forEach((desc, idx) => { data.push([`사진 ${idx + 1}`, desc]); });
+  }
+  const ws = XLSX.utils.aoa_to_sheet(data);
+  ws['!cols'] = [{ wch: 8 }, { wch: 25 }, { wch: 40 }, { wch: 8 }, { wch: 8 }, { wch: 10 }];
+  XLSX.utils.book_append_sheet(wb, ws, '점검표');
+  XLSX.writeFile(wb, `${facilityName}_순회점검표_${inspectionDate}.xlsx`);
+}
+function showStatus(msg, type) {
+  document.getElementById('statusMsg').innerHTML = `<div class="status ${type}">${msg}</div>`;
+}
+</script>
+</body>
+</html>
