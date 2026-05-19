@@ -1,0 +1,10 @@
+{
+  "name": "안전 순회점검",
+  "short_name": "안전점검",
+  "description": "구청 자활센터 식당/카페 안전점검 자동화 앱",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "orientation": "portrait"
+}
